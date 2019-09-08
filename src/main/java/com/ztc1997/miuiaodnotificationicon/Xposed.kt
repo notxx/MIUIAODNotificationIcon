@@ -6,14 +6,19 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
+
 import com.ztc1997.miuiaodnotificationicon.extention.KXposedHelpers
 import com.ztc1997.miuiaodnotificationicon.extention.toBitmap
 import com.ztc1997.miuiaodnotificationicon.extention.toGrayscale
+
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.callbacks.XC_LoadPackage
+
+import top.trumeet.common.cache.IconCache;
 
 private const val ICON_PKG_DRAWABLE_MAP = "ICON_PKG_DRAWABLE_MAP"
 private const val ICON_SIZE = 126
@@ -29,7 +34,7 @@ class Xposed : IXposedHookLoadPackage {
         )
 
         KXposedHelpers.findAndHookConstructor(
-            AODViewClass, Context::class.java, AttributeSet::class.java
+            AODViewClass, Context::class, AttributeSet::class
         ) {
             afterHookedMethod {
                 val ctx = it.args[0] as Context
@@ -56,6 +61,11 @@ class Xposed : IXposedHookLoadPackage {
             AODViewClass, "bindView", BadgetImageViewClass, Int::class.java
         ) {
             beforeHookedMethod {
+				val stack = Thread.currentThread().getStackTrace();
+				for (el in stack) {
+					Log.d("inspect", "${el.className}.${el.methodName}")
+				}
+				
                 val pkg = (XposedHelpers.callMethod(it.thisObject, "getPkg", it.args[1])
                     ?: return@beforeHookedMethod) as String
                 val badgetImageView = it.args[0] as ImageView
