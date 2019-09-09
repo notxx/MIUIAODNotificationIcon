@@ -13,6 +13,12 @@ object KXposedHelpers {
 		XposedHelpers.findAndHookMethod(clazz, methodName, *parameterTypes, methodHookCallback(callback))
 
 	fun findAndHookMethod(
+		clazz: Class<*>, methodName: String,
+		callback: _XC_MethodHook.() -> Unit
+	): XC_MethodHook.Unhook? =
+		findAndHookMethod(clazz = clazz, methodName = methodName, parameterTypes = *(arrayOf<Class<*>>()), callback = callback)
+
+	fun findAndHookMethod(
 		clazz: Class<*>, methodName: String, vararg parameterTypes: KClass<*>,
 		callback: _XC_MethodHook.() -> Unit
 	): XC_MethodHook.Unhook? =

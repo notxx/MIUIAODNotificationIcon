@@ -2,9 +2,12 @@ package com.ztc1997.miuiaodnotificationicon
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
+import android.os.AsyncTask
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
@@ -27,6 +30,36 @@ private const val ICON_SIZE = 126
 class Xposed : IXposedHookLoadPackage {
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
         if (lpparam.packageName != "com.miui.aod") return
+
+		val NC = XposedHelpers.findClass("com.miui.aod.util.NotificationController", lpparam.classLoader)
+
+		KXposedHelpers.findAndHookMethod(NC, "update") {
+			beforeHookedMethod {
+				val URI = Uri.parse("content://keyguard.notification/notifications");
+				val thiz = it.thisObject
+				val mContext = XposedHelpers.getObjectField(thiz, "mContext") as Context
+
+				(object : AsyncTask<Unit, Unit, MutableList<String>>() {
+					override fun doInBackground(vararg args:Unit): MutableList<String> {
+						lateinit var query: Cursor
+						val list = ArrayList<String>()
+						try {
+							query = mContext.getContentResolver().query(URI, arrayOf("icon", "pkg"), null, null, null)
+							while (query != null && query.moveToNext()) {
+								val bytes = query.getBlob(0)
+								val pkg = query.getString(1)
+								list.add(pkg)
+							}
+						} finally {
+							if (query != null) query.close()
+						}
+						return list
+					}
+				}).execute()
+
+				it.result = null
+			}
+		}
 
         val AODViewClass = XposedHelpers.findClass(
             "com.miui.aod.AODView",

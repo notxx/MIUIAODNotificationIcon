@@ -1,15 +1,9 @@
 package com.ztc1997.miuiaodnotificationicon
 
 import android.app.Activity
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.Icon
 import android.net.Uri
-import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -20,7 +14,6 @@ import android.widget.TextView
 
 import java.io.DataOutputStream
 
-import top.trumeet.common.cache.IconCache
 
 data class Notification(val _id: Int, val icon: Bitmap?, val title: String, val content: String, val time: String, val info: String, val subtext: String, val key: Int, val pkg: String, val user_id: Int)
 
@@ -35,37 +28,37 @@ public class AodActivity : Activity() {
 
 		val URI = Uri.parse("content://keyguard.notification/notifications");
 		val query = this.getContentResolver().query(URI, arrayOf("*"), null, null, null)
-		Log.d("inspect0", "${query.getCount()}")
+		Log.d("inspect0", "${query?.getCount()}")
 		val list = ArrayList<Notification>()
-		while (query != null && query.moveToNext()) {
-			val n = Notification(
-				_id = query.getInt(0),
-				icon = query.getBlob(1)?.toBitmap(),
-				title = query.getString(2),
-				content = query.getString(3),
-				time = query.getString(4),
-				info = query.getString(5),
-				subtext = query.getString(6),
-				key = query.getInt(7),
-				pkg = query.getString(8),
-				user_id = query.getInt(9)
-			)
-			list.add(n)
-			for (i in 0..9) {
-				when (query.getType(i)) {
-				0 -> Log.d("inspect0", "$i ${query.getColumnName(i)} NULL")
-				1 -> Log.d("inspect0", "$i int ${query.getColumnName(i)} ${query.getInt(i)}")
-				2 -> Log.d("inspect0", "$i float ${query.getColumnName(i)} ${query.getFloat(i)}")
-				3 -> Log.d("inspect0", "$i string ${query.getColumnName(i)} ${query.getString(i)}")
-				4 -> Log.d("inspect0", "$i blob ${query.getColumnName(i)} ${query.getBlob(i)}")
+		if (query != null) {
+			val index = query.getColumnIndex("_id")
+			while (query.moveToNext()) {
+				val n = Notification(
+					_id = query.getInt(index),
+					icon = query.getBlob(1)?.toBitmap(),
+					title = query.getString(2),
+					content = query.getString(3),
+					time = query.getString(4),
+					info = query.getString(5),
+					subtext = query.getString(6),
+					key = query.getInt(7),
+					pkg = query.getString(8),
+					user_id = query.getInt(9)
+				)
+				list.add(n)
+				for (i in 0..9) {
+					when (query.getType(i)) {
+					0 -> Log.d("inspect0", "$i ${query.getColumnName(i)} NULL")
+					1 -> Log.d("inspect0", "$i int ${query.getColumnName(i)} ${query.getInt(i)}")
+					2 -> Log.d("inspect0", "$i float ${query.getColumnName(i)} ${query.getFloat(i)}")
+					3 -> Log.d("inspect0", "$i string ${query.getColumnName(i)} ${query.getString(i)}")
+					4 -> Log.d("inspect0", "$i blob ${query.getColumnName(i)} ${query.getBlob(i)}")
+					}
 				}
 			}
 		}
 
 		val listView = ListView(this)
-		// cache = IconCache.getInstance()
-		// val manager = getPackageManager()
-		// val packages = manager.getInstalledPackages(0)
 		listView.adapter = object : BaseAdapter() {
 			override fun getCount(): Int
 				= list.count()
